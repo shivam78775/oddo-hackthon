@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { getBudgetBreakdown, addBudgetItem, getBudgetItems } from '../controllers/budgetController.js';
+import { getBudgetBreakdown, addBudgetItem, getBudgetItems, getOverallBudget } from '../controllers/budgetController.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -18,6 +18,9 @@ const addBudgetItemSchema = z.object({
 
 // ─── Routes ──────────────────────────────────────────────────
 
+// GET /api/budget/overview — get aggregated budget across all trips
+router.get('/overview', getOverallBudget);
+
 // GET /api/budget/trips/:id — get budget breakdown for a trip
 router.get('/trips/:id', getBudgetBreakdown);
 
@@ -28,3 +31,4 @@ router.get('/trips/:id/items', getBudgetItems);
 router.post('/trips/:id/items', validate(addBudgetItemSchema), addBudgetItem);
 
 export default router;
+

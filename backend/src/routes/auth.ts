@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, logout, getMe } from '../controllers/authController.js';
+import { signup, login, logout, getMe, updateProfile, changePassword } from '../controllers/authController.js';
 import { validate } from '../middleware/validate.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { z } from 'zod';
@@ -23,11 +23,26 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+const updateProfileSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  phone: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  country: z.string().optional().nullable(),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+});
+
 // ─── Routes ──────────────────────────────────────────────────
 
 router.post('/signup', validate(signupSchema), signup);
 router.post('/login', validate(loginSchema), login);
 router.post('/logout', logout);
 router.get('/me', authMiddleware, getMe);
+router.patch('/profile', authMiddleware, validate(updateProfileSchema), updateProfile);
+router.patch('/password', authMiddleware, validate(changePasswordSchema), changePassword);
 
 export default router;
+

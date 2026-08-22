@@ -1,4 +1,4 @@
-import type { Trip, Stop, Activity, BudgetItem, BudgetBreakdown } from '../types';
+import type { Trip, Stop, Activity, BudgetItem, BudgetBreakdown, OverallBudget } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -161,3 +161,11 @@ export async function fetchBudgetBreakdown(tripId: string): Promise<BudgetBreakd
   });
   return handleResponse<BudgetBreakdown>(res);
 }
+
+export async function fetchOverallBudget(): Promise<OverallBudget> {
+  const res = await fetch(`${API_URL}/budget/overview`, {
+    credentials: 'include',
+  });
+  return handleResponse<OverallBudget>(res);
+}
+
