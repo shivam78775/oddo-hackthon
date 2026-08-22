@@ -53,7 +53,7 @@ export async function getBudgetBreakdown(req: Request, res: Response) {
     // Distribute budget items across stop days (or trip days if no stopId)
     for (const item of trip.budgetItems) {
       if (item.stopId) {
-        const stop = trip.stops.find(s => s.id === item.stopId);
+        const stop = trip.stops.find((s: any) => s.id === item.stopId);
         if (stop) {
           const days = getDaysBetween(stop.startDate, stop.endDate);
           const perDay = item.amount / Math.max(days.length, 1);
@@ -74,7 +74,7 @@ export async function getBudgetBreakdown(req: Request, res: Response) {
     // Add activity costs to the days of their parent stop
     for (const stop of trip.stops) {
       const days = getDaysBetween(stop.startDate, stop.endDate);
-      const activityTotal = stop.activities.reduce((sum, a) => sum + a.cost, 0);
+      const activityTotal = stop.activities.reduce((sum: number, a: { cost: number }) => sum + a.cost, 0);
       const perDay = activityTotal / Math.max(days.length, 1);
       for (const day of days) {
         dayMap.set(day, (dayMap.get(day) || 0) + perDay);
@@ -117,4 +117,64 @@ function getDaysBetween(start: Date, end: Date): string[] {
   }
 
   return days;
+}
+
+// ─── Add Budget Item ─────────────────────────────────────────
+
+export async function addBudgetItem(req: Request, res: Response) {
+  try {
+    const trip = await prisma.trip.findUnique({ where: { id: req.params.id } });
+
+    if (!trip) {
+      res.status(404).json({ error: { message: 'Trip not found' } });
+      return;
+    }
+    if (trip.userId !== req.user!.id) {
+      res.status(403).json({ error: { message: 'Access denied' } });
+      return;
+    }
+
+    const { category, amount, stopId } = req.body;
+
+    const budgetItem = await prisma.budgetItem.create({
+      data: {
+        tripId: trip.id,
+        category,
+        amount,
+        stopId: stopId || null,
+      },
+    });
+
+    res.status(201).json({ data: budgetItem });
+  } catch (err) {
+    console.error('Add budget item error:', err);
+    res.status(500).json({ error: { message: 'Failed to add budget item' } });
+  }
+}
+
+// ─── Get Budget Items ────────────────────────────────────────
+
+export async function getBudgetItems(req: Request, res: Response) {
+  try {
+    const trip = await prisma.trip.findUnique({ where: { id: req.params.id } });
+
+    if (!trip) {
+      res.status(404).json({ error: { message: 'Trip not found' } });
+      return;
+    }
+    if (trip.userId !== req.user!.id) {
+      res.status(403).json({ error: { message: 'Access denied' } });
+      return;
+    }
+
+    const items = await prisma.budgetItem.findMany({
+      where: { tripId: trip.id },
+      orderBy: { id: 'desc' },
+    });
+
+    res.json({ data: items });
+  } catch (err) {
+    console.error('Get budget items error:', err);
+    res.status(500).json({ error: { message: 'Failed to get budget items' } });
+  }
 }

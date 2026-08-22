@@ -3,8 +3,8 @@ import { searchActivities } from '../api/search';
 import type { Activity } from '../types';
 import SearchBar from '../components/SearchBar';
 import LoadingSpinner from '../components/LoadingSpinner';
-import useDebounce from '../hooks/useDebounce';
-import { ActivityIcon, DollarSignIcon, ClockIcon } from 'lucide-react';
+import { useDebounce } from '../hooks/useDebounce';
+import { DollarSignIcon, ClockIcon } from 'lucide-react';
 
 export default function ActivitySearch() {
   const [query, setQuery] = useState('');
@@ -21,7 +21,7 @@ export default function ActivitySearch() {
       try {
         const data = await searchActivities({ 
           q: debouncedQuery, 
-          category: category || undefined,
+          category: (category as any) || undefined,
           limit: 20 
         });
         setActivities(data.data);

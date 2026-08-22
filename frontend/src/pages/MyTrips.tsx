@@ -55,7 +55,7 @@ export default function MyTrips() {
           <p className="text-gray-400 text-lg">Manage all your travel itineraries in one place.</p>
         </div>
         <button
-          onClick={() => navigate('/trips/create')}
+          onClick={() => navigate('/create-trip')}
           className="btn-primary flex items-center gap-2 flex-shrink-0"
         >
           <PlusIcon className="w-5 h-5" />
@@ -72,7 +72,7 @@ export default function MyTrips() {
           <p className="text-gray-400 mb-8 text-lg">
             You haven't planned any trips yet. Start building your dream itinerary today!
           </p>
-          <button onClick={() => navigate('/trips/create')} className="btn-primary text-lg px-8">
+          <button onClick={() => navigate('/create-trip')} className="btn-primary text-lg px-8">
             Start Planning
           </button>
         </div>

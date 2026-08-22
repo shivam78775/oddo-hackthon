@@ -139,7 +139,7 @@ export async function deleteActivity(_stopId: string, activityId: string): Promi
 // ─── Budget ──────────────────────────────────────────────────
 
 export async function addBudgetItem(tripId: string, data: Partial<BudgetItem>): Promise<BudgetItem> {
-  const res = await fetch(`${API_URL}/trips/${tripId}/budget`, {
+  const res = await fetch(`${API_URL}/budget/trips/${tripId}/items`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -149,7 +149,7 @@ export async function addBudgetItem(tripId: string, data: Partial<BudgetItem>): 
 }
 
 export async function fetchBudgetItems(tripId: string): Promise<BudgetItem[]> {
-  const res = await fetch(`${API_URL}/trips/${tripId}/budget/items`, {
+  const res = await fetch(`${API_URL}/budget/trips/${tripId}/items`, {
     credentials: 'include',
   });
   return handleResponse<BudgetItem[]>(res);

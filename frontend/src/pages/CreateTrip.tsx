@@ -48,12 +48,12 @@ export default function CreateTrip() {
       const newTrip = await createTrip(user!.id, validated);
       
       // Navigate to the newly created trip's itinerary builder
-      navigate(`/trips/${newTrip.id}/build`);
+      navigate(`/trips/${newTrip.id}/edit`);
       
     } catch (err) {
       if (err instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
-        err.errors.forEach(e => {
+        err.issues.forEach((e: any) => {
           if (e.path[0]) newErrors[e.path[0].toString()] = e.message;
         });
         setErrors(newErrors);
