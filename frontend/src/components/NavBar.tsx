@@ -48,9 +48,6 @@ export default function NavBar() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary-500/20 group-hover:shadow-primary-500/40 transition-shadow">
-                <Globe className="w-5 h-5 text-white" />
-              </div>
               <span className="font-display font-bold text-xl text-white hidden sm:block">
                 Globe<span className="text-gradient">Trotter</span>
               </span>
