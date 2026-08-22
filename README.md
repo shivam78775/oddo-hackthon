@@ -1,74 +1,195 @@
-# 🌍 GlobeTrotter
+<div align="center">
+  <img src="frontend/src/assets/hero.png" alt="GlobeTrotter Banner" width="100%" />
 
-GlobeTrotter is a complete, full-stack monorepo application built during a 24-hour hackathon. It is a smart travel itinerary builder designed to help users plan, visualize, and budget their multi-city trips in one seamless experience.
-
----
-
-## ✨ Key Features
-
-### 1. Dynamic Trip & Itinerary Builder
-- **Multi-City Planning:** Add multiple destinations (Stops) to a single trip, linked to a real-world database of seeded cities.
-- **Drag & Drop Organization:** The itinerary builder allows you to dynamically reorder stops chronologically.
-- **Activity Management:** Seamlessly add inline activities (Sightseeing, Food, Adventure) within each stop.
-
-### 2. Comprehensive Budget Engine
-- **Automated Cost Aggregation:** The backend actively aggregates activity costs across stops to provide total estimated trip expenses.
-- **Categorical Breakdown:** Expenses are grouped by category, utilizing `recharts` to render a dynamic Pie Chart showing the distribution of costs.
-- **Daily Spending Trends:** A dynamic Bar Chart illustrates how the budget is distributed day-by-day across the trip timeline.
-
-### 3. Global Discovery
-- **City Search Engine:** Discover cities based on regions using debounced searching and backend pagination.
-- **Activity Catalog:** Browse a predefined catalog of 50 real-world activities, filterable by category and cost.
-
-### 4. Interactive Dashboards
-- **User Dashboard:** A personalized landing page showing a greeting, recent trips, and trending destinations.
-- **Trip Management (My Trips):** Organizes trips into "Happening Now", "Upcoming", and "Past", with intuitive delete actions.
+  <h1>🌍 GlobeTrotter</h1>
+  
+  <p><strong>A sophisticated, intelligent platform for planning, visualizing, and budgeting multi-city trips seamlessly.</strong></p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+    <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" />
+    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+    <br/>
+    <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+    <img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" alt="Prisma" />
+    <img src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
+  </p>
+</div>
 
 ---
 
-## 🏗️ Technical Architecture
+## 📖 Overview
 
-GlobeTrotter uses a modern, strictly-typed monorepo architecture, clearly separating frontend client code from backend API logic.
+GlobeTrotter was developed during a 24-hour hackathon to demonstrate a complete, full-stack monorepo application. It transforms the chaotic process of trip planning into a visually stunning, dynamic, and intuitive experience. Users can build itineraries step-by-step, manage daily activities, and automatically calculate categorical budgets based on real-time data.
 
-### Frontend (`/frontend`)
-- **Framework:** React 18 powered by Vite
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS with custom glassmorphism components, gradients, and micro-animations.
-- **Routing:** React Router v7
-- **State & Data Fetching:** React Hooks, Context API, and modular API wrapper functions.
-- **Data Visualization:** Recharts
+---
 
-### Backend (`/backend`)
-- **Framework:** Express 5 (Node.js)
-- **Language:** TypeScript
-- **Authentication:** JSON Web Tokens (JWT) stored securely in `httpOnly` cookies. Passwords hashed using `bcryptjs`.
-- **Validation:** Strict type safety and runtime validation using `zod` schemas.
+## ✨ Core Features
 
-### Database Layer (`/backend/src/prisma`)
-- **Database:** SQLite (Migrated from PostgreSQL for frictionless local development)
-- **ORM:** Prisma
-- **Data Model:**
-  - `User`, `Trip`, `City`, `Stop`, `Activity`, `BudgetItem`
-- **Seed Data:** Ships with a powerful `seed.ts` script that inserts **30 real-world cities** and **50 activities** into the database.
+*   **Dynamic Itinerary Builder:** Create trips with multiple stops. Reorder them chronologically with an intuitive drag-and-drop interface.
+*   **Activity Engine:** Add specific activities (Sightseeing, Food, Adventure) to each stop, tied to real-world catalog data.
+*   **Automated Budgeting:** Automatically calculates and aggregates costs across all stops. Visualizes expenses via interactive Recharts (Pie and Bar graphs).
+*   **Global Discovery:** Search and filter through a seeded database of international cities and curated activities.
+*   **Personalized Dashboard:** A customized landing page showcasing upcoming trips and trending destinations.
+
+---
+
+## 🏗️ Architecture & Workflow
+
+GlobeTrotter follows a strict client-server separation within a monorepo structure.
+
+### High-Level Architecture Flowchart
+
+```mermaid
+graph TD
+    subgraph Client [Frontend - React + Vite]
+        UI[User Interface]
+        State[React Context / Hooks]
+        API_Layer[API Fetch Wrappers]
+        
+        UI --> State
+        State --> API_Layer
+    end
+
+    subgraph Server [Backend - Express + Node.js]
+        Router[Express Routers]
+        Controllers[Business Logic Controllers]
+        Auth[JWT Middleware]
+        Zod[Zod Validation]
+        
+        API_Layer -- HTTP REST --> Router
+        Router --> Auth
+        Auth --> Zod
+        Zod --> Controllers
+    end
+
+    subgraph Database [Data Layer]
+        ORM[Prisma ORM]
+        DB[(SQLite dev.db)]
+        
+        Controllers --> ORM
+        ORM --> DB
+    end
+    
+    classDef frontend fill:#1e1e3f,stroke:#61DAFB,stroke-width:2px,color:#fff;
+    classDef backend fill:#1e1e3f,stroke:#68a063,stroke-width:2px,color:#fff;
+    classDef database fill:#1e1e3f,stroke:#3982CE,stroke-width:2px,color:#fff;
+    
+    class Client frontend;
+    class Server backend;
+    class Database database;
+```
+
+### User Journey Workflow
+
+```mermaid
+journey
+    title Planning a Trip on GlobeTrotter
+    section Authentication
+      Sign Up / Log In: 5: User
+      JWT Token Issued: 5: System
+    section Discovery
+      View Dashboard: 4: User
+      Search for Cities: 5: User
+    section Itinerary Building
+      Create New Trip: 5: User
+      Add Stops (Cities): 4: User
+      Add Activities to Stops: 4: User
+    section Budget & Review
+      View Budget Charts: 5: User
+      Finalize Itinerary: 5: User
+```
+
+---
+
+## 🗄️ Database Structure
+
+The application uses Prisma ORM connected to a SQLite database. The schema is highly normalized to handle complex many-to-many travel relationships.
+
+### Entity-Relationship (ER) Diagram
+
+```mermaid
+erDiagram
+    USER ||--o{ TRIP : creates
+    USER ||--o{ POST : writes
+    
+    TRIP ||--o{ STOP : contains
+    TRIP ||--o{ BUDGET_ITEM : manages
+    
+    CITY ||--o{ STOP : "is location for"
+    
+    STOP ||--o{ ACTIVITY : includes
+    
+    USER {
+        String id PK
+        String name
+        String email UK
+        String passwordHash
+        String role "USER/ADMIN"
+    }
+    
+    TRIP {
+        String id PK
+        String userId FK
+        String name
+        DateTime startDate
+        DateTime endDate
+        Boolean isPublic
+    }
+    
+    CITY {
+        String id PK
+        String name
+        String country
+        Float costIndex
+        Float popularityScore
+    }
+    
+    STOP {
+        String id PK
+        String tripId FK
+        String cityId FK
+        DateTime startDate
+        DateTime endDate
+        Int orderIndex
+    }
+    
+    ACTIVITY {
+        String id PK
+        String stopId FK
+        String name
+        String category
+        Float cost
+        Int durationMins
+    }
+    
+    BUDGET_ITEM {
+        String id PK
+        String tripId FK
+        String category
+        Float amount
+    }
+```
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these steps to run the complete full-stack environment locally on your machine.
+Follow these steps to spin up the entire full-stack environment locally.
 
 ### Prerequisites
-- **Node.js:** v18 or higher
+*   Node.js v18+
+*   Git
 
-### 1. Repository Setup
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/shivam78775/oddo-hackthon.git
 cd oddo-hackthon
 ```
 
-### 2. Backend Initialization
-The backend serves the API and connects to the SQLite database.
-
+### 2. Backend Setup
+The backend serves the REST API and connects to SQLite.
 ```bash
 cd backend
 
@@ -78,20 +199,18 @@ npm install
 # Set up environment variables
 cp .env.example .env
 
-# Push the Prisma schema to generate the SQLite database (dev.db)
+# Generate SQLite DB and Prisma Client
 npx prisma db push
 
-# Seed the database with the 30 real-world cities
+# Seed the database with 30 cities and 50 activities
 npm run db:seed
 
-# Start the development server
+# Start the dev server (Runs on port 4000)
 npm run dev
 ```
-*The backend API is now running on `http://localhost:4000`.*
 
-### 3. Frontend Initialization
+### 3. Frontend Setup
 Open a **new terminal window** and navigate to the frontend directory.
-
 ```bash
 cd frontend
 
@@ -101,21 +220,15 @@ npm install
 # Set up environment variables
 cp .env.example .env
 
-# Start the Vite development server
+# Start the Vite development server (Runs on port 5173)
 npm run dev
 ```
-*The frontend is now running on `http://localhost:5173`.*
 
-### 4. Testing the Application
-1. Open your browser and navigate to **http://localhost:5173**.
-2. Click **Sign Up** to create a new user account.
-3. Explore the Dashboard, search for cities, and create your first Trip!
+### 4. Experience GlobeTrotter
+Navigate to `http://localhost:5173` in your browser. Create an account, build a trip, and watch the budget dynamically generate!
 
 ---
 
-## 🏆 Hackathon Context
-
-This project was built to demonstrate full-stack capabilities within a restricted 24-hour time frame. 
-- All data is dynamic and stored via SQLite (no static frontend JSON files).
-- The UI is highly responsive and designed with a premium, animated aesthetic.
-- Form inputs across the application are validated strictly via Zod on the server.
+<div align="center">
+  <p>Built with ❤️ during the Odoo Hackathon.</p>
+</div>
