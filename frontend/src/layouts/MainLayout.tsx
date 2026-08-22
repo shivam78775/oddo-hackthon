@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import AIChatbot from '../components/AIChatbot';
 
 export default function MainLayout() {
   return (
@@ -8,6 +9,7 @@ export default function MainLayout() {
       <main className="page-container relative z-10">
         <Outlet />
       </main>
+      <AIChatbot />
     </div>
   );
 }
