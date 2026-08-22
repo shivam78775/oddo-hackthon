@@ -1,106 +1,121 @@
-# GlobeTrotter 🌍
+# 🌍 GlobeTrotter
 
-A personalized, intelligent platform for planning and visualizing multi-city trips — itinerary building, budget estimation, and sharing, all in one seamless flow. Built from the ground up for a 24-hour hackathon to demonstrate a complete full-stack web application.
+GlobeTrotter is a complete, full-stack monorepo application built during a 24-hour hackathon. It is a smart travel itinerary builder designed to help users plan, visualize, and budget their multi-city trips in one seamless experience.
 
-## 🚀 Features & Implementation
+---
 
-GlobeTrotter was evolved from a mock frontend prototype into a **production-ready full-stack monorepo**, fulfilling all hackathon requirements for dynamic data, responsive UI, and backend robustness.
+## ✨ Key Features
 
-### Frontend (React 18 + Vite + Tailwind CSS)
-- **Stunning UI/UX**: Built with a sleek dark theme, glassmorphism design (translucent cards), gradient text, and micro-animations for a premium feel.
-- **Dynamic Dashboards**: User dashboard and "My Trips" pages segmented by Ongoing, Upcoming, and Past trips.
-- **Interactive Itinerary Builder**: Real-time interface to add cities as stops, assign travel dates, reorder stops (up/down), and inline creation of activities (sightseeing, food, adventure, etc.).
-- **Budget Data Visualization**: Integrated `recharts` to render a Pie chart for categorical expenses (food vs. transport) and a Bar chart for daily expense breakdowns.
-- **Global Search Engine**: Real-time debounce searching with filtering by Region and Category for both Cities and Activities.
+### 1. Dynamic Trip & Itinerary Builder
+- **Multi-City Planning:** Add multiple destinations (Stops) to a single trip, linked to a real-world database of seeded cities.
+- **Drag & Drop Organization:** The itinerary builder allows you to dynamically reorder stops chronologically.
+- **Activity Management:** Seamlessly add inline activities (Sightseeing, Food, Adventure) within each stop.
 
-### Backend (Node.js + Express 5 + TypeScript)
-- **Robust REST API**: Fully typed Express API with modular controllers, routes, and middleware.
-- **Authentication**: JWT-based secure authentication using `httpOnly` cookies and `bcrypt` password hashing.
-- **Validation**: Strict input validation on both client and server using `Zod` schemas.
-- **Database Architecture**: PostgreSQL relational database managed via Prisma ORM. Strict foreign key constraints and cascading deletes ensure data integrity (e.g., deleting a trip deletes its stops and activities).
+### 2. Comprehensive Budget Engine
+- **Automated Cost Aggregation:** The backend actively aggregates activity costs across stops to provide total estimated trip expenses.
+- **Categorical Breakdown:** Expenses are grouped by category, utilizing `recharts` to render a dynamic Pie Chart showing the distribution of costs.
+- **Daily Spending Trends:** A dynamic Bar Chart illustrates how the budget is distributed day-by-day across the trip timeline.
 
-### Data Layer (PostgreSQL + Prisma)
-- **Real-World Seed Data**: The database is seeded with 30 real-world cities across the globe (complete with popularity scores, cost indices, and images) and 50 global activities. This satisfies the strict hackathon requirement of using real database records rather than static JSON files on the frontend.
+### 3. Global Discovery
+- **City Search Engine:** Discover cities based on regions using debounced searching and backend pagination.
+- **Activity Catalog:** Browse a predefined catalog of 50 real-world activities, filterable by category and cost.
 
-## 🛠️ Tech Stack
+### 4. Interactive Dashboards
+- **User Dashboard:** A personalized landing page showing a greeting, recent trips, and trending destinations.
+- **Trip Management (My Trips):** Organizes trips into "Happening Now", "Upcoming", and "Past", with intuitive delete actions.
 
-- **Frontend:** React 18, Vite, TypeScript, Tailwind CSS, React Router, Recharts, Lucide Icons
-- **Backend:** Node.js, Express 5, TypeScript, JWT, bcrypt, Zod
-- **Database:** PostgreSQL, Prisma ORM
+---
 
-## ⚙️ Getting Started
+## 🏗️ Technical Architecture
+
+GlobeTrotter uses a modern, strictly-typed monorepo architecture, clearly separating frontend client code from backend API logic.
+
+### Frontend (`/frontend`)
+- **Framework:** React 18 powered by Vite
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS with custom glassmorphism components, gradients, and micro-animations.
+- **Routing:** React Router v7
+- **State & Data Fetching:** React Hooks, Context API, and modular API wrapper functions.
+- **Data Visualization:** Recharts
+
+### Backend (`/backend`)
+- **Framework:** Express 5 (Node.js)
+- **Language:** TypeScript
+- **Authentication:** JSON Web Tokens (JWT) stored securely in `httpOnly` cookies. Passwords hashed using `bcryptjs`.
+- **Validation:** Strict type safety and runtime validation using `zod` schemas.
+
+### Database Layer (`/backend/src/prisma`)
+- **Database:** SQLite (Migrated from PostgreSQL for frictionless local development)
+- **ORM:** Prisma
+- **Data Model:**
+  - `User`, `Trip`, `City`, `Stop`, `Activity`, `BudgetItem`
+- **Seed Data:** Ships with a powerful `seed.ts` script that inserts **30 real-world cities** and **50 activities** into the database.
+
+---
+
+## 🚀 Getting Started
+
+Follow these steps to run the complete full-stack environment locally on your machine.
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL (running locally or a cloud database URL)
+- **Node.js:** v18 or higher
 
-### 1. Clone the repository
+### 1. Repository Setup
 ```bash
 git clone https://github.com/shivam78775/oddo-hackthon.git
 cd oddo-hackthon
 ```
 
-### 2. Backend Setup
+### 2. Backend Initialization
+The backend serves the API and connects to the SQLite database.
+
 ```bash
 cd backend
+
+# Install dependencies
 npm install
 
-# Configure your environment variables
+# Set up environment variables
 cp .env.example .env
-# Important: Update the DATABASE_URL in .env to match your PostgreSQL password!
 
-# Push the schema and seed the database
+# Push the Prisma schema to generate the SQLite database (dev.db)
 npx prisma db push
+
+# Seed the database with the 30 real-world cities
 npm run db:seed
 
-# Start the API server
+# Start the development server
 npm run dev
-# The backend will start on http://localhost:4000
 ```
+*The backend API is now running on `http://localhost:4000`.*
 
-### 3. Frontend Setup
-Open a new terminal window:
+### 3. Frontend Initialization
+Open a **new terminal window** and navigate to the frontend directory.
+
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
 
-# Configure your environment variables
+# Set up environment variables
 cp .env.example .env
 
 # Start the Vite development server
 npm run dev
-# The frontend will start on http://localhost:5173
 ```
+*The frontend is now running on `http://localhost:5173`.*
 
-### 4. Experience GlobeTrotter
-Visit **[http://localhost:5173](http://localhost:5173)** in your browser. Create an account, explore cities, and start building your first itinerary!
+### 4. Testing the Application
+1. Open your browser and navigate to **http://localhost:5173**.
+2. Click **Sign Up** to create a new user account.
+3. Explore the Dashboard, search for cities, and create your first Trip!
 
-## 📂 Project Structure
+---
 
-```text
-/oddo-hackthon
-├── backend/                  # Node.js + Express API
-│   ├── src/
-│   │   ├── controllers/      # Business logic (auth, trips, stops, budget)
-│   │   ├── middleware/       # JWT auth guard, Zod validation, error handling
-│   │   ├── prisma/           # Schema definitions and DB seed scripts
-│   │   ├── routes/           # Express route definitions
-│   │   ├── lib/              # DB connection and JWT utilities
-│   │   └── app.ts            # App entry point
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── frontend/                 # React + Vite UI
-│   ├── src/
-│   │   ├── api/              # Typed fetch wrappers calling the backend
-│   │   ├── components/       # Reusable UI elements (NavBar, TripCard, Forms)
-│   │   ├── context/          # React context (Auth session state)
-│   │   ├── pages/            # View components (Dashboard, Builder, Search)
-│   │   ├── types/            # Shared TypeScript interfaces
-│   │   └── index.css         # Tailwind directives and custom animations
-│   ├── package.json
-│   └── vite.config.ts
-│
-├── SEED.md                   # Documentation on the seeded real-world dataset
-└── README.md                 # You are here!
-```
+## 🏆 Hackathon Context
+
+This project was built to demonstrate full-stack capabilities within a restricted 24-hour time frame. 
+- All data is dynamic and stored via SQLite (no static frontend JSON files).
+- The UI is highly responsive and designed with a premium, animated aesthetic.
+- Form inputs across the application are validated strictly via Zod on the server.
