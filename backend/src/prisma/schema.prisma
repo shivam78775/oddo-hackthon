@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  photoUrl     String?
+  phone        String?
+  city         String?
+  country      String?
+  createdAt    DateTime @default(now())
+  trips        Trip[]
+}
+
+model Trip {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  name          String
+  startDate     DateTime
+  endDate       DateTime
+  description   String?
+  coverPhotoUrl String?
+  isPublic      Boolean      @default(false)
+  publicSlug    String?      @unique
+  createdAt     DateTime     @default(now())
+  stops         Stop[]
+  budgetItems   BudgetItem[]
+}
+
+model City {
+  id              String  @id @default(uuid())
+  name            String
+  country         String
+  region          String?
+  costIndex       Float?
+  popularityScore Float?
+  imageUrl        String?
+  stops           Stop[]
+}
+
+model Stop {
+  id         String     @id @default(uuid())
+  tripId     String
+  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  cityId     String
+  city       City       @relation(fields: [cityId], references: [id])
+  startDate  DateTime
+  endDate    DateTime
+  orderIndex Int
+  activities Activity[]
+}
+
+model Activity {
+  id           String  @id @default(uuid())
+  stopId       String
+  stop         Stop    @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  name         String
+  category     String  // sightseeing | food | adventure | culture | other
+  cost         Float
+  durationMins Int?
+  description  String?
+  imageUrl     String?
+}
+
+model BudgetItem {
+  id       String @id @default(uuid())
+  tripId   String
+  trip     Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  stopId   String?
+  category String // transport | stay | activity | meal
+  amount   Float
+}
