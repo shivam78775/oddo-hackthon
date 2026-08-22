@@ -81,7 +81,7 @@ router.get('/regions', async (_req: Request, res: Response) => {
       distinct: ['region'],
       orderBy: { region: 'asc' },
     });
-    const regions = cities.map(c => c.region).filter(Boolean) as string[];
+    const regions = cities.map((c: any) => c.region).filter(Boolean) as string[];
     res.json({ data: regions });
   } catch (err) {
     console.error('Get regions error:', err);
@@ -98,7 +98,7 @@ router.get('/countries', async (_req: Request, res: Response) => {
       distinct: ['country'],
       orderBy: { country: 'asc' },
     });
-    const countries = cities.map(c => c.country);
+    const countries = cities.map((c: any) => c.country);
     res.json({ data: countries });
   } catch (err) {
     console.error('Get countries error:', err);

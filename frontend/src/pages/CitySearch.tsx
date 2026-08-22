@@ -4,7 +4,7 @@ import { searchCities, getUniqueRegions } from '../api/search';
 import type { City } from '../types';
 import SearchBar from '../components/SearchBar';
 import LoadingSpinner from '../components/LoadingSpinner';
-import useDebounce from '../hooks/useDebounce';
+import { useDebounce } from '../hooks/useDebounce';
 import { MapPinIcon, GlobeIcon, TrendingUpIcon } from 'lucide-react';
 
 export default function CitySearch() {

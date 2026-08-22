@@ -55,7 +55,7 @@ export default function Dashboard() {
             </p>
           </div>
           <button
-            onClick={() => navigate('/trips/create')}
+            onClick={() => navigate('/create-trip')}
             className="flex-shrink-0 inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-900 rounded-full font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg"
           >
             <PlusIcon className="w-6 h-6" />
@@ -70,7 +70,7 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold text-white">Your Recent Trips</h2>
           {recentTrips.length > 0 && (
             <button
-              onClick={() => navigate('/trips')}
+              onClick={() => navigate('/my-trips')}
               className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
             >
               View all →
@@ -92,7 +92,7 @@ export default function Dashboard() {
             <h3 className="text-xl font-medium text-white mb-2">No trips planned yet</h3>
             <p className="text-gray-400 mb-6">Your next great adventure begins with a single click.</p>
             <button
-              onClick={() => navigate('/trips/create')}
+              onClick={() => navigate('/create-trip')}
               className="btn-primary"
             >
               Start Planning

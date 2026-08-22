@@ -67,7 +67,7 @@ export default function ItineraryView() {
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       {/* Header */}
       <button 
-        onClick={() => navigate('/trips')}
+        onClick={() => navigate('/my-trips')}
         className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
       >
         <ArrowLeftIcon className="w-4 h-4" /> Back to My Trips
@@ -90,7 +90,7 @@ export default function ItineraryView() {
             </div>
           </div>
           <button 
-            onClick={() => navigate(`/trips/${trip.id}/build`)}
+            onClick={() => navigate(`/trips/${trip.id}/edit`)}
             className="btn-primary whitespace-nowrap"
           >
             Edit Itinerary
@@ -120,7 +120,7 @@ export default function ItineraryView() {
           {trip.stops?.length === 0 ? (
             <div className="glass-card p-12 text-center rounded-2xl">
               <p className="text-gray-400 text-lg mb-4">No destinations added yet.</p>
-              <button onClick={() => navigate(`/trips/${trip.id}/build`)} className="btn-primary">Add Destinations</button>
+              <button onClick={() => navigate(`/trips/${trip.id}/edit`)} className="btn-primary">Add Destinations</button>
             </div>
           ) : (
             trip.stops?.map((stop, index) => (
@@ -202,7 +202,7 @@ export default function ItineraryView() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {pieData.map((entry, index) => (
+                    {pieData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

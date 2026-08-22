@@ -95,7 +95,7 @@ export default function ItineraryBuilder() {
     e.preventDefault();
     if (!newActivity.name) return;
     try {
-      await addActivity(stopId, newActivity);
+      await addActivity(stopId, newActivity as any);
       setActiveStopId(null);
       setNewActivity({ name: '', category: 'sightseeing', cost: 0, durationMins: 60 });
       await loadData();
