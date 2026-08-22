@@ -178,3 +178,73 @@ export async function getBudgetItems(req: Request, res: Response) {
     res.status(500).json({ error: { message: 'Failed to get budget items' } });
   }
 }
+
+// ─── Overall Budget (All Trips) ──────────────────────────────
+
+export async function getOverallBudget(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: { message: 'Not authenticated' } });
+      return;
+    }
+
+    const trips = await prisma.trip.findMany({
+      where: { userId: req.user.id },
+      include: {
+        stops: {
+          include: { activities: true },
+        },
+        budgetItems: true,
+      },
+    });
+
+    // Aggregate by category across all trips
+    const byCategory: Record<string, number> = {
+      transport: 0,
+      stay: 0,
+      activity: 0,
+      meal: 0,
+    };
+
+    const byTrip: { tripId: string; tripName: string; total: number }[] = [];
+
+    for (const trip of trips) {
+      let tripTotal = 0;
+
+      // Sum budget items
+      for (const item of trip.budgetItems) {
+        if (byCategory[item.category] !== undefined) {
+          byCategory[item.category] += item.amount;
+        }
+        tripTotal += item.amount;
+      }
+
+      // Sum activity costs
+      for (const stop of trip.stops) {
+        for (const act of stop.activities) {
+          byCategory.activity += act.cost;
+          tripTotal += act.cost;
+        }
+      }
+
+      byTrip.push({
+        tripId: trip.id,
+        tripName: trip.name,
+        total: Math.round(tripTotal * 100) / 100,
+      });
+    }
+
+    const total = Object.values(byCategory).reduce((sum, v) => sum + v, 0);
+
+    res.json({
+      data: {
+        byCategory,
+        byTrip,
+        total: Math.round(total * 100) / 100,
+      },
+    });
+  } catch (err) {
+    console.error('Overall budget error:', err);
+    res.status(500).json({ error: { message: 'Failed to compute overall budget' } });
+  }
+}

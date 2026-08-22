@@ -140,3 +140,85 @@ export async function getMe(req: Request, res: Response) {
     res.status(500).json({ error: { message: 'Failed to get user' } });
   }
 }
+
+// ─── Update Profile ──────────────────────────────────────────
+
+export async function updateProfile(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: { message: 'Not authenticated' } });
+      return;
+    }
+
+    const { name, phone, city, country } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        name,
+        phone: phone || null,
+        city: city || null,
+        country: country || null,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        photoUrl: true,
+        phone: true,
+        city: true,
+        country: true,
+        createdAt: true,
+      },
+    });
+
+    res.json({ data: user });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ error: { message: 'Failed to update profile' } });
+  }
+}
+
+// ─── Change Password ─────────────────────────────────────────
+
+export async function changePassword(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: { message: 'Not authenticated' } });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    // Fetch user with password hash
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      res.status(404).json({ error: { message: 'User not found' } });
+      return;
+    }
+
+    // Verify current password
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      res.status(400).json({
+        error: {
+          message: 'Current password is incorrect',
+          fields: { currentPassword: 'Current password is incorrect' },
+        },
+      });
+      return;
+    }
+
+    // Hash and save new password
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { passwordHash },
+    });
+
+    res.json({ data: { message: 'Password changed successfully' } });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: { message: 'Failed to change password' } });
+  }
+}
