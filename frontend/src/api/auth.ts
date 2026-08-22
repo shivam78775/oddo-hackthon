@@ -1,4 +1,4 @@
-import type { User, LoginPayload, SignupPayload } from '../types';
+import type { User, LoginPayload, SignupPayload, UpdateProfilePayload, ChangePasswordPayload } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -49,3 +49,24 @@ export async function getMe(): Promise<User | null> {
     return null;
   }
 }
+
+export async function updateProfile(payload: UpdateProfilePayload): Promise<User> {
+  const res = await fetch(`${API_URL}/auth/profile`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<User>(res);
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<{ message: string }> {
+  const res = await fetch(`${API_URL}/auth/password`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<{ message: string }>(res);
+}
+

@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (payload: LoginPayload) => Promise<User>;
   signup: (payload: SignupPayload) => Promise<User>;
   logout: () => Promise<void>;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -41,8 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((u: User) => {
+    setUser(u);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, signup, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -53,3 +58,4 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
+

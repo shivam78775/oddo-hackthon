@@ -17,6 +17,7 @@ import ActivitySearch from './pages/ActivitySearch';
 import Community from './pages/Community';
 import CalendarView from './pages/CalendarView';
 import AdminDashboard from './pages/AdminDashboard';
+import BudgetOverview from './pages/BudgetOverview';
 
 function App() {
   return (
@@ -44,7 +45,8 @@ function App() {
             
             {/* Other */}
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/budget" element={<ItineraryView />} /> {/* Budget is part of ItineraryView or separate, mapped here for now */}
+            <Route path="/budget" element={<BudgetOverview />} />
+
             <Route path="/community" element={<Community />} />
             <Route path="/calendar" element={<CalendarView />} />
             <Route path="/admin" element={<AdminDashboard />} />

@@ -170,3 +170,25 @@ export type FilterOption = {
   label: string;
   value: string;
 };
+
+// ─── Profile & Password ──────────────────────────────────────
+
+export interface UpdateProfilePayload {
+  name: string;
+  phone?: string | null;
+  city?: string | null;
+  country?: string | null;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+// ─── Overall Budget ──────────────────────────────────────────
+
+export interface OverallBudget {
+  byCategory: Record<BudgetCategory, number>;
+  byTrip: { tripId: string; tripName: string; total: number }[];
+  total: number;
+}
