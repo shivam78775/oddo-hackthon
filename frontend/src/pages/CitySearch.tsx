@@ -87,7 +87,7 @@ export default function CitySearch() {
               onClick={() => {
                 // In a real app, this might open a city detail modal or just allow adding to a trip
                 // We'll navigate to create trip with this city as a query param (hypothetically)
-                navigate('/trips/create');
+                navigate('/create-trip');
               }}
             >
               <div className="relative h-48 overflow-hidden flex-shrink-0">
