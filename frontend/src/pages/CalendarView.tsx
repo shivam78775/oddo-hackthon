@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getTrips } from '../api/trips';
+import { fetchTrips } from '../api/trips';
 import type { Trip } from '../types';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
@@ -14,7 +14,7 @@ export default function CalendarView() {
 
   const fetchTrips = async () => {
     try {
-      const data = await getTrips();
+      const data = await fetchTrips();
       setTrips(data);
     } catch (err) {
       console.error(err);
