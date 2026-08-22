@@ -9,10 +9,10 @@ export default function CalendarView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTrips();
+    loadTrips();
   }, []);
 
-  const fetchTrips = async () => {
+  const loadTrips = async () => {
     try {
       const data = await fetchTrips();
       setTrips(data);
