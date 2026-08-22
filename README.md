@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="frontend/src/assets/hero.png" alt="GlobeTrotter Banner" width="100%" />
-
   <h1>🌍 GlobeTrotter</h1>
   
   <p><strong>A sophisticated, intelligent platform for planning, visualizing, and budgeting multi-city trips seamlessly.</strong></p>
@@ -21,17 +19,32 @@
 
 ## 📖 Overview
 
-GlobeTrotter was developed during a 24-hour hackathon to demonstrate a complete, full-stack monorepo application. It transforms the chaotic process of trip planning into a visually stunning, dynamic, and intuitive experience. Users can build itineraries step-by-step, manage daily activities, and automatically calculate categorical budgets based on real-time data.
+GlobeTrotter was developed from the ground up during a 24-hour hackathon to demonstrate a complete, production-ready full-stack monorepo application. It transforms the chaotic process of trip planning into a visually stunning, dynamic, and intuitive experience. Users can build itineraries step-by-step, manage daily activities across multiple cities, and automatically calculate categorical budgets based on real-time backend data.
+
+Unlike standard mock applications, GlobeTrotter utilizes a real Express+Prisma backend connected to a SQLite database. It implements full CRUD operations, JWT-based authentication, and runtime data validation using Zod.
 
 ---
 
-## ✨ Core Features
+## ✨ Features Deep-Dive
 
-*   **Dynamic Itinerary Builder:** Create trips with multiple stops. Reorder them chronologically with an intuitive drag-and-drop interface.
-*   **Activity Engine:** Add specific activities (Sightseeing, Food, Adventure) to each stop, tied to real-world catalog data.
-*   **Automated Budgeting:** Automatically calculates and aggregates costs across all stops. Visualizes expenses via interactive Recharts (Pie and Bar graphs).
-*   **Global Discovery:** Search and filter through a seeded database of international cities and curated activities.
-*   **Personalized Dashboard:** A customized landing page showcasing upcoming trips and trending destinations.
+### 1. Dynamic Itinerary Builder
+- **Multi-City Planning:** Users can add multiple destination "Stops" to a single trip. The app connects to a real database of seeded cities with geographical and popularity metrics.
+- **Chronological Sorting:** The itinerary builder dynamically reorders stops chronologically based on user-selected start and end dates.
+- **Activity Engine:** Within each stop, users can seamlessly add inline activities (Sightseeing, Food, Adventure, Transport). The backend actively recalculates totals and durations.
+
+### 2. Comprehensive Budget Engine
+- **Automated Cost Aggregation:** The backend aggregates the costs of all activities and base expenses (like flights and hotels) across all stops to provide a total estimated trip expense.
+- **Categorical Breakdown:** Expenses are grouped by category. The frontend utilizes `recharts` to render a dynamic Pie Chart showing the distribution of costs visually.
+- **Budget Tracking:** Dedicated endpoints ensure that the user's allocated budget is compared against actual estimated expenses.
+
+### 3. Global Discovery & Search
+- **City Search Engine:** A high-performance search engine to discover cities based on regions. Features debounced searching and backend pagination.
+- **Activity Catalog:** Browse a predefined catalog of 50 real-world activities, filterable by category and cost index.
+
+### 4. Interactive & Premium UI/UX
+- **Glassmorphism Design:** Custom Tailwind CSS configuration offering a dark-themed, glass-like aesthetic with subtle gradients and drop shadows.
+- **Micro-Animations:** Fluid page transitions, hover effects, and loading states provide a premium application feel.
+- **Responsive Layout:** fully optimized for mobile devices, tablets, and desktop viewports.
 
 ---
 
@@ -44,32 +57,32 @@ GlobeTrotter follows a strict client-server separation within a monorepo structu
 ```mermaid
 graph TD
     subgraph Client [Frontend - React + Vite]
-        UI[User Interface]
-        State[React Context / Hooks]
-        API_Layer[API Fetch Wrappers]
+        UI[React Components / Pages]
+        State[React Context / Custom Hooks]
+        API_Layer[Axios / Fetch Wrappers]
         
-        UI --> State
-        State --> API_Layer
+        UI -->|Triggers Action| State
+        State -->|Invokes| API_Layer
     end
 
     subgraph Server [Backend - Express + Node.js]
         Router[Express Routers]
-        Controllers[Business Logic Controllers]
         Auth[JWT Middleware]
-        Zod[Zod Validation]
+        Zod[Zod Request Validation]
+        Controllers[Business Logic Controllers]
         
-        API_Layer -- HTTP REST --> Router
+        API_Layer -- HTTP REST / JSON --> Router
         Router --> Auth
-        Auth --> Zod
-        Zod --> Controllers
+        Auth -->|Authorized| Zod
+        Zod -->|Validated| Controllers
     end
 
     subgraph Database [Data Layer]
-        ORM[Prisma ORM]
+        ORM[Prisma ORM Client]
         DB[(SQLite dev.db)]
         
-        Controllers --> ORM
-        ORM --> DB
+        Controllers -->|Prisma Queries| ORM
+        ORM -->|SQL| DB
     end
     
     classDef frontend fill:#1e1e3f,stroke:#61DAFB,stroke-width:2px,color:#fff;
@@ -85,20 +98,22 @@ graph TD
 
 ```mermaid
 journey
-    title Planning a Trip on GlobeTrotter
-    section Authentication
+    title Complete GlobeTrotter User Journey
+    section 1. Authentication
+      Visit Landing Page: 5: User
       Sign Up / Log In: 5: User
-      JWT Token Issued: 5: System
-    section Discovery
-      View Dashboard: 4: User
-      Search for Cities: 5: User
-    section Itinerary Building
-      Create New Trip: 5: User
-      Add Stops (Cities): 4: User
+      JWT Cookie Issued: 5: Backend
+    section 2. Discovery
+      View Personalized Dashboard: 4: User
+      Search Trending Cities: 5: User
+    section 3. Itinerary Building
+      Create New Trip (Dates/Name): 5: User
+      Add Stops (Cities to Visit): 4: User
       Add Activities to Stops: 4: User
-    section Budget & Review
-      View Budget Charts: 5: User
-      Finalize Itinerary: 5: User
+      Backend Validates Dates: 5: Backend
+    section 4. Budget & Review
+      View Budget Distribution Charts: 5: User
+      Finalize Itinerary & Save: 5: User
 ```
 
 ---
@@ -174,13 +189,30 @@ erDiagram
 
 ---
 
+## 📡 Core API Reference
+
+The backend exposes a comprehensive RESTful API. Below is a high-level overview of the primary routes. All routes (except `/api/auth/login` and `/register`) require a valid JWT cookie.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| **POST** | `/api/auth/register` | Registers a new user and returns a JWT |
+| **POST** | `/api/auth/login` | Authenticates a user and sets an `httpOnly` cookie |
+| **GET**  | `/api/auth/me` | Returns the currently authenticated user profile |
+| **GET**  | `/api/trips` | Fetches all trips belonging to the authenticated user |
+| **POST** | `/api/trips` | Creates a new trip |
+| **GET**  | `/api/trips/:id` | Fetches a specific trip, including all nested stops and activities |
+| **GET**  | `/api/cities/search` | Queries the database for cities (supports `?q=` query parameters) |
+| **GET**  | `/api/budget/:tripId` | Calculates and returns aggregated categorical budget data for a trip |
+
+---
+
 ## 🚀 Getting Started
 
 Follow these steps to spin up the entire full-stack environment locally.
 
 ### Prerequisites
-*   Node.js v18+
-*   Git
+*   **Node.js:** v18 or higher
+*   **Git:** Version control
 
 ### 1. Clone the Repository
 ```bash
@@ -189,23 +221,23 @@ cd oddo-hackthon
 ```
 
 ### 2. Backend Setup
-The backend serves the REST API and connects to SQLite.
+The backend serves the REST API, handles authentication, and connects to the SQLite database.
 ```bash
 cd backend
 
-# Install dependencies
+# Install all backend dependencies
 npm install
 
 # Set up environment variables
 cp .env.example .env
 
-# Generate SQLite DB and Prisma Client
+# Generate SQLite DB schema and Prisma Client types
 npx prisma db push
 
-# Seed the database with 30 cities and 50 activities
+# Seed the database with 30 cities and 50 activities for testing
 npm run db:seed
 
-# Start the dev server (Runs on port 4000)
+# Start the Express development server (Runs on port 4000)
 npm run dev
 ```
 
@@ -214,7 +246,7 @@ Open a **new terminal window** and navigate to the frontend directory.
 ```bash
 cd frontend
 
-# Install dependencies
+# Install all frontend dependencies
 npm install
 
 # Set up environment variables
@@ -225,7 +257,9 @@ npm run dev
 ```
 
 ### 4. Experience GlobeTrotter
-Navigate to `http://localhost:5173` in your browser. Create an account, build a trip, and watch the budget dynamically generate!
+1. Open your browser and navigate to `http://localhost:5173`.
+2. Click **Sign Up** to create a test account (or use the seeded demo credentials if provided).
+3. Experience the full flow: Create a trip, add cities, assign activities, and watch the budget charts render dynamically!
 
 ---
 
