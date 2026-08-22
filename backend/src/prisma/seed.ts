@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -127,6 +128,60 @@ async function main() {
   // 
   // NOTE: The global activity catalog is served from a static list in the backend
   // controller, not from the Activity table (which is for user-specific stop activities).
+
+  // Create an Admin user
+  const adminHash = await bcrypt.hash('admin123', 10);
+  const admin = await prisma.user.create({
+    data: {
+      name: 'System Admin',
+      email: 'admin@globetrotter.com',
+      passwordHash: adminHash,
+      role: 'ADMIN',
+      city: 'San Francisco',
+      country: 'USA'
+    }
+  });
+  console.log('✅ Created Admin user (admin@globetrotter.com / admin123)');
+
+  // Create a Standard user and some community posts
+  const userHash = await bcrypt.hash('password123', 10);
+  const user1 = await prisma.user.create({
+    data: {
+      name: 'Alex Explorer',
+      email: 'alex@example.com',
+      passwordHash: userHash,
+      city: 'London',
+      country: 'UK'
+    }
+  });
+
+  const user2 = await prisma.user.create({
+    data: {
+      name: 'Sarah Nomad',
+      email: 'sarah@example.com',
+      passwordHash: userHash,
+      city: 'Sydney',
+      country: 'Australia'
+    }
+  });
+
+  await prisma.post.createMany({
+    data: [
+      {
+        userId: user1.id,
+        content: 'Just got back from Paris! The Eiffel Tower at night is absolutely magical. Highly recommend taking the Seine river cruise afterwards.',
+      },
+      {
+        userId: user2.id,
+        content: 'Anyone have recommendations for street food in Tokyo? Heading there next month and want to hit all the local spots!',
+      },
+      {
+        userId: user1.id,
+        content: 'Pro tip for Bali: skip the popular beaches in the south and head north to Lovina for a much more relaxed vibe.',
+      }
+    ]
+  });
+  console.log('✅ Created mock community posts');
 
   const cityCount = await prisma.city.count();
   console.log(`✅ Seeded ${cityCount} cities`);

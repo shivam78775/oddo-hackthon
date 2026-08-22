@@ -15,8 +15,8 @@ import UserProfile from './pages/UserProfile';
 import CitySearch from './pages/CitySearch';
 import ActivitySearch from './pages/ActivitySearch';
 import Community from './pages/Community';
-import CalendarView from './pages/CalendarView';
 import AdminDashboard from './pages/AdminDashboard';
+import CalendarView from './pages/CalendarView';
 
 function App() {
   return (

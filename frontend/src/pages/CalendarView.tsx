@@ -1,212 +1,145 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { fetchTrips } from '../api/trips';
+import { useEffect, useState } from 'react';
+import { getTrips } from '../api/trips';
 import type { Trip } from '../types';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { ChevronLeft, ChevronRight, MapPin, Calendar } from 'lucide-react';
-
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-// Color palette for trips
-const TRIP_COLORS = [
-  'bg-blue-500/20 border-blue-500/40 text-blue-300',
-  'bg-emerald-500/20 border-emerald-500/40 text-emerald-300',
-  'bg-amber-500/20 border-amber-500/40 text-amber-300',
-  'bg-purple-500/20 border-purple-500/40 text-purple-300',
-  'bg-rose-500/20 border-rose-500/40 text-rose-300',
-  'bg-cyan-500/20 border-cyan-500/40 text-cyan-300',
-];
-
-function dateToStr(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
 export default function CalendarView() {
-  const navigate = useNavigate();
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth() };
-  });
 
   useEffect(() => {
-    fetchTrips()
-      .then(setTrips)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    fetchTrips();
   }, []);
 
-  // Build a map of date → trips for the current month
-  const tripsByDate = useMemo(() => {
-    const map = new Map<string, { trip: Trip; colorClass: string }[]>();
+  const fetchTrips = async () => {
+    try {
+      const data = await getTrips();
+      setTrips(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    trips.forEach((trip, i) => {
-      const colorClass = TRIP_COLORS[i % TRIP_COLORS.length];
+  // Calendar logic
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 is Sunday
+  
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+
+  // Determine if a day has a trip
+  const getTripsForDay = (day: number) => {
+    const date = new Date(year, month, day);
+    // Normalize to midnight for accurate comparison
+    const compareTime = date.getTime();
+
+    return trips.filter(trip => {
       const start = new Date(trip.startDate);
+      start.setHours(0, 0, 0, 0);
       const end = new Date(trip.endDate);
-      const current = new Date(start);
-
-      while (current <= end) {
-        const key = dateToStr(current);
-        if (!map.has(key)) map.set(key, []);
-        map.get(key)!.push({ trip, colorClass });
-        current.setDate(current.getDate() + 1);
-      }
-    });
-
-    return map;
-  }, [trips]);
-
-  // Generate calendar grid days
-  const calendarDays = useMemo(() => {
-    const { year, month } = currentMonth;
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    const days: (number | null)[] = [];
-    // Leading empty cells
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    // Actual days
-    for (let d = 1; d <= daysInMonth; d++) days.push(d);
-
-    return days;
-  }, [currentMonth]);
-
-  const goToPrevMonth = () => {
-    setCurrentMonth(prev => {
-      if (prev.month === 0) return { year: prev.year - 1, month: 11 };
-      return { ...prev, month: prev.month - 1 };
+      end.setHours(23, 59, 59, 999);
+      
+      return compareTime >= start.getTime() && compareTime <= end.getTime();
     });
   };
 
-  const goToNextMonth = () => {
-    setCurrentMonth(prev => {
-      if (prev.month === 11) return { year: prev.year + 1, month: 0 };
-      return { ...prev, month: prev.month + 1 };
-    });
+  const getTripColorClass = (index: number) => {
+    const classes = [
+      'bg-blue-500/80',
+      'bg-purple-500/80',
+      'bg-cyan-500/80',
+      'bg-emerald-500/80',
+      'bg-rose-500/80'
+    ];
+    return classes[index % classes.length];
   };
 
-  const goToToday = () => {
-    const now = new Date();
-    setCurrentMonth({ year: now.getFullYear(), month: now.getMonth() });
-  };
+  if (loading) {
+    return <div className="text-center py-20 text-slate-400">Loading calendar...</div>;
+  }
 
-  if (loading) return <LoadingSpinner />;
-
-  const todayStr = dateToStr(new Date());
-  const { year, month } = currentMonth;
+  // Generate blank cells for days before the 1st of the month
+  const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+  // Generate actual day cells
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-            <Calendar className="w-8 h-8 text-primary-400" />
-            Trip Calendar
-          </h1>
-          <p className="text-surface-400">See all your trips at a glance.</p>
-        </div>
-
-        <button
-          onClick={goToToday}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-surface-300 hover:text-white hover:bg-white/10 transition-all text-sm font-medium"
-        >
-          Today
-        </button>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent flex items-center gap-3">
+          <CalendarIcon size={32} className="text-purple-400" />
+          Calendar View
+        </h1>
+        <p className="text-slate-400 mt-2">Get a high-level view of your travel schedule.</p>
       </div>
 
-      {/* Calendar Card */}
-      <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
-        {/* Month Navigation */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
-          <button onClick={goToPrevMonth} className="p-2 rounded-xl hover:bg-white/10 text-surface-400 hover:text-white transition-colors">
-            <ChevronLeft className="w-5 h-5" />
+      <div className="glass-card rounded-xl overflow-hidden p-6">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between mb-8">
+          <button onClick={prevMonth} className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-300">
+            <ChevronLeft size={24} />
           </button>
-          <h2 className="text-2xl font-bold text-white">
-            {MONTH_NAMES[month]} {year}
+          <h2 className="text-2xl font-semibold text-slate-100">
+            {monthNames[month]} {year}
           </h2>
-          <button onClick={goToNextMonth} className="p-2 rounded-xl hover:bg-white/10 text-surface-400 hover:text-white transition-colors">
-            <ChevronRight className="w-5 h-5" />
+          <button onClick={nextMonth} className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-300">
+            <ChevronRight size={24} />
           </button>
-        </div>
-
-        {/* Weekday Headers */}
-        <div className="grid grid-cols-7 border-b border-white/10">
-          {WEEKDAYS.map(day => (
-            <div key={day} className="py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider">
-              {day}
-            </div>
-          ))}
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7">
-          {calendarDays.map((day, index) => {
-            if (day === null) {
-              return <div key={`empty-${index}`} className="min-h-[100px] border-r border-b border-white/5 bg-white/[0.01]" />;
-            }
+        <div className="grid grid-cols-7 gap-px bg-slate-700/50 rounded-lg overflow-hidden border border-slate-700">
+          {/* Day Headers */}
+          {dayNames.map(day => (
+            <div key={day} className="bg-slate-800/80 py-3 text-center text-xs font-semibold tracking-wider text-slate-400">
+              {day}
+            </div>
+          ))}
 
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayTrips = tripsByDate.get(dateStr) || [];
-            const isToday = dateStr === todayStr;
+          {/* Grid Cells */}
+          {blanks.map(blank => (
+            <div key={`blank-${blank}`} className="bg-slate-900/50 min-h-[120px] p-2"></div>
+          ))}
 
+          {days.map(day => {
+            const dayTrips = getTripsForDay(day);
+            const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+            
             return (
-              <div
-                key={dateStr}
-                className={`min-h-[100px] border-r border-b border-white/5 p-1.5 transition-colors hover:bg-white/5 ${
-                  isToday ? 'bg-primary-500/5' : ''
-                }`}
-              >
-                <div className={`text-sm font-medium mb-1 w-7 h-7 flex items-center justify-center rounded-full ${
-                  isToday ? 'bg-primary-500 text-white' : 'text-surface-400'
+              <div key={`day-${day}`} className={`min-h-[120px] p-2 bg-slate-800/40 relative group hover:bg-slate-800/60 transition-colors ${
+                isToday ? 'ring-2 ring-inset ring-cyan-500' : ''
+              }`}>
+                <span className={`inline-block w-7 h-7 text-center leading-7 rounded-full text-sm font-medium ${
+                  isToday ? 'bg-cyan-500 text-white' : 'text-slate-400 group-hover:text-slate-200'
                 }`}>
                   {day}
-                </div>
+                </span>
 
-                <div className="space-y-0.5">
-                  {dayTrips.slice(0, 2).map(({ trip, colorClass }) => (
-                    <button
-                      key={trip.id}
-                      onClick={() => navigate(`/trips/${trip.id}`)}
-                      className={`w-full text-left text-[10px] font-medium px-1.5 py-0.5 rounded border truncate ${colorClass} hover:opacity-80 transition-opacity`}
+                <div className="mt-2 space-y-1">
+                  {dayTrips.map((trip, idx) => (
+                    <div 
+                      key={`${day}-${trip.id}`}
+                      className={`text-[10px] md:text-xs px-2 py-1 rounded shadow-sm text-white truncate font-medium ${getTripColorClass(idx)}`}
+                      title={trip.name}
                     >
                       {trip.name}
-                    </button>
+                    </div>
                   ))}
-                  {dayTrips.length > 2 && (
-                    <p className="text-[10px] text-surface-500 pl-1.5">+{dayTrips.length - 2} more</p>
-                  )}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* Legend */}
-      {trips.length > 0 && (
-        <div className="glass-card rounded-xl border border-white/10 p-5">
-          <h3 className="text-sm font-semibold text-surface-400 uppercase tracking-wider mb-3">Your Trips</h3>
-          <div className="flex flex-wrap gap-3">
-            {trips.map((trip, i) => (
-              <button
-                key={trip.id}
-                onClick={() => navigate(`/trips/${trip.id}`)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium ${TRIP_COLORS[i % TRIP_COLORS.length]} hover:opacity-80 transition-opacity`}
-              >
-                <MapPin className="w-3 h-3" />
-                {trip.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

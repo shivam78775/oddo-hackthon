@@ -16,8 +16,19 @@ model User {
   phone        String?
   city         String?
   country      String?
+  role         String   @default("USER") // USER or ADMIN
   createdAt    DateTime @default(now())
   trips        Trip[]
+  posts        Post[]
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  tripId    String?  // Optional reference to a trip they are sharing
+  createdAt DateTime @default(now())
 }
 
 model Trip {

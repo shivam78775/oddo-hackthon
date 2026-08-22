@@ -1,219 +1,176 @@
-import { useState, useEffect } from 'react';
-import { fetchTrips } from '../api/trips';
-import { searchCities } from '../api/search';
-import type { Trip, City } from '../types';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { ShieldCheck, MapPin, Globe, Activity, TrendingUp, BarChart3, Calendar } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getAdminStats, getAdminUsers } from '../api/admin';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Users, MapPin, Activity, ShieldAlert } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminDashboard() {
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
+  const { user } = useAuth();
+  const [stats, setStats] = useState<any>(null);
+  const [usersList, setUsersList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [tripsData, citiesData] = await Promise.all([
-          fetchTrips(),
-          searchCities({ limit: 50 }),
-        ]);
-        setTrips(tripsData);
-        setCities(citiesData.data);
-      } catch (err) {
-        console.error('Admin load error:', err);
-      } finally {
-        setLoading(false);
-      }
+    if (user?.role === 'ADMIN') {
+      fetchData();
     }
-    loadData();
-  }, []);
+  }, [user]);
 
-  if (loading) return <LoadingSpinner />;
+  const fetchData = async () => {
+    try {
+      const [statsData, usersData] = await Promise.all([
+        getAdminStats(),
+        getAdminUsers()
+      ]);
+      setStats(statsData);
+      setUsersList(usersData);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Compute stats
-  const totalStops = trips.reduce((sum, t) => sum + (t.stops?.length || 0), 0);
-  const totalActivities = trips.reduce(
-    (sum, t) => sum + (t.stops?.reduce((s, stop) => s + (stop.activities?.length || 0), 0) || 0),
-    0
-  );
-  const totalCost = trips.reduce(
-    (sum, t) => sum + (t.stops?.reduce((s, stop) => s + (stop.activities?.reduce((a, act) => a + act.cost, 0) || 0), 0) || 0),
-    0
-  );
+  if (user?.role !== 'ADMIN') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <ShieldAlert size={64} className="text-red-500 mb-4" />
+        <h1 className="text-2xl font-bold text-slate-200">Access Denied</h1>
+        <p className="text-slate-400 mt-2">You do not have permission to view the admin panel.</p>
+      </div>
+    );
+  }
 
-  const uniqueRegions = new Set(cities.map(c => c.region).filter(Boolean));
+  if (loading || !stats) {
+    return <div className="text-center py-20 text-slate-400">Loading admin data...</div>;
+  }
 
-  // Trips by status
-  const now = new Date();
-  const ongoing = trips.filter(t => new Date(t.startDate) <= now && new Date(t.endDate) >= now).length;
-  const upcoming = trips.filter(t => new Date(t.startDate) > now).length;
-  const completed = trips.filter(t => new Date(t.endDate) < now).length;
-
-  // Most popular cities (cities with most stops)
-  const cityStopCount = new Map<string, { city: City; count: number }>();
-  trips.forEach(trip => {
-    trip.stops?.forEach(stop => {
-      if (stop.city) {
-        const existing = cityStopCount.get(stop.city.id);
-        if (existing) {
-          existing.count++;
-        } else {
-          cityStopCount.set(stop.city.id, { city: stop.city, count: 1 });
-        }
-      }
-    });
-  });
-  const topCities = Array.from(cityStopCount.values())
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const statCards = [
-    { icon: MapPin, label: 'Total Trips', value: trips.length, color: 'text-blue-400', bg: 'from-blue-500/10 to-blue-500/5' },
-    { icon: Globe, label: 'Cities in DB', value: cities.length, color: 'text-emerald-400', bg: 'from-emerald-500/10 to-emerald-500/5' },
-    { icon: Activity, label: 'Total Stops', value: totalStops, color: 'text-amber-400', bg: 'from-amber-500/10 to-amber-500/5' },
-    { icon: TrendingUp, label: 'Activities Added', value: totalActivities, color: 'text-purple-400', bg: 'from-purple-500/10 to-purple-500/5' },
-    { icon: BarChart3, label: 'Total Activity Cost', value: `$${totalCost.toLocaleString()}`, color: 'text-green-400', bg: 'from-green-500/10 to-green-500/5' },
-    { icon: Calendar, label: 'Regions', value: uniqueRegions.size, color: 'text-rose-400', bg: 'from-rose-500/10 to-rose-500/5' },
-  ];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-          <ShieldCheck className="w-6 h-6 text-amber-400" />
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-3">
+          <ShieldAlert size={32} className="text-red-400" />
+          Admin Panel
+        </h1>
+        <p className="text-slate-400 mt-2">Manage users, view platform statistics, and track popular destinations.</p>
+      </div>
+
+      {/* Top Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="glass-card rounded-xl p-6 flex items-center gap-4 border-l-4 border-l-blue-500">
+          <div className="p-3 bg-blue-500/20 rounded-lg text-blue-400">
+            <Users size={24} />
+          </div>
+          <div>
+            <p className="text-slate-400 text-sm">Total Users</p>
+            <p className="text-2xl font-bold text-slate-100">{stats.totalUsers}</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-          <p className="text-surface-400">Platform overview and statistics.</p>
+        <div className="glass-card rounded-xl p-6 flex items-center gap-4 border-l-4 border-l-green-500">
+          <div className="p-3 bg-green-500/20 rounded-lg text-green-400">
+            <Activity size={24} />
+          </div>
+          <div>
+            <p className="text-slate-400 text-sm">Total Trips Created</p>
+            <p className="text-2xl font-bold text-slate-100">{stats.totalTrips}</p>
+          </div>
+        </div>
+        <div className="glass-card rounded-xl p-6 flex items-center gap-4 border-l-4 border-l-purple-500">
+          <div className="p-3 bg-purple-500/20 rounded-lg text-purple-400">
+            <MapPin size={24} />
+          </div>
+          <div>
+            <p className="text-slate-400 text-sm">Most Popular City</p>
+            <p className="text-lg font-bold text-slate-100 truncate">{stats.popularCities[0]?.name || 'N/A'}</p>
+          </div>
         </div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        {statCards.map(stat => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className={`glass-card rounded-2xl border border-white/10 p-6 bg-gradient-to-br ${stat.bg}`}>
-              <div className="flex items-center gap-3 mb-3">
-                <Icon className={`w-6 h-6 ${stat.color}`} />
-                <p className="text-sm text-surface-400">{stat.label}</p>
-              </div>
-              <p className="text-3xl font-bold text-white">{stat.value}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Trip Status Breakdown */}
-        <div className="glass-card rounded-2xl border border-white/10 p-6">
-          <h2 className="text-xl font-bold text-white mb-6">Trip Status Breakdown</h2>
-          <div className="space-y-4">
-            {[
-              { label: 'Ongoing', count: ongoing, color: 'bg-green-500', total: trips.length },
-              { label: 'Upcoming', count: upcoming, color: 'bg-blue-500', total: trips.length },
-              { label: 'Completed', count: completed, color: 'bg-gray-500', total: trips.length },
-            ].map(item => {
-              const pct = trips.length > 0 ? Math.round((item.count / item.total) * 100) : 0;
-              return (
-                <div key={item.label}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm text-surface-300 font-medium">{item.label}</span>
-                    <span className="text-sm text-surface-400">{item.count} ({pct}%)</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${item.color} rounded-full transition-all duration-500`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* User Growth Chart */}
+        <div className="glass-card rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-slate-200 mb-6">User Growth Trends</h2>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.userGrowth}>
+                <XAxis dataKey="month" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip cursor={{ fill: '#1e293b' }} contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '8px', color: '#f1f5f9' }} />
+                <Bar dataKey="users" fill="#38bdf8" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Most Visited Cities */}
-        <div className="glass-card rounded-2xl border border-white/10 p-6">
-          <h2 className="text-xl font-bold text-white mb-6">Most Visited Cities</h2>
-          {topCities.length > 0 ? (
-            <div className="space-y-3">
-              {topCities.map(({ city, count }, index) => (
-                <div
-                  key={city.id}
-                  className="flex items-center gap-4 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+        {/* Popular Cities Chart */}
+        <div className="glass-card rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-slate-200 mb-6">Popular Destinations</h2>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={stats.popularCities}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  innerRadius={60}
+                  paddingAngle={5}
+                  dataKey="count"
+                  nameKey="name"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sm font-bold text-surface-400">
-                    {index + 1}
-                  </div>
-                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={city.imageUrl || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=100'}
-                      alt={city.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium truncate">{city.name}</p>
-                    <p className="text-xs text-surface-500">{city.country}</p>
-                  </div>
-                  <span className="text-sm text-primary-400 font-semibold">{count} {count === 1 ? 'visit' : 'visits'}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-surface-500 italic">No trip data yet.</p>
-          )}
+                  {stats.popularCities.map((_: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '8px', color: '#f1f5f9' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      {/* Recent Trips Table */}
-      <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
-        <div className="p-6 border-b border-white/10 bg-white/5">
-          <h2 className="text-xl font-bold text-white">Recent Trips</h2>
+      {/* User Management Section */}
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-slate-700/50">
+          <h2 className="text-lg font-semibold text-slate-200">Manage Users</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left px-6 py-3 text-surface-500 font-medium">Trip Name</th>
-                <th className="text-left px-6 py-3 text-surface-500 font-medium">Dates</th>
-                <th className="text-left px-6 py-3 text-surface-500 font-medium">Stops</th>
-                <th className="text-left px-6 py-3 text-surface-500 font-medium">Activities</th>
-                <th className="text-left px-6 py-3 text-surface-500 font-medium">Status</th>
+          <table className="w-full text-left">
+            <thead className="bg-slate-800/50 text-slate-400 text-sm">
+              <tr>
+                <th className="p-4 font-medium">User</th>
+                <th className="p-4 font-medium">Email</th>
+                <th className="p-4 font-medium">Role</th>
+                <th className="p-4 font-medium">Trips Created</th>
+                <th className="p-4 font-medium">Joined</th>
               </tr>
             </thead>
-            <tbody>
-              {trips.slice(0, 10).map(trip => {
-                const stopCount = trip.stops?.length || 0;
-                const actCount = trip.stops?.reduce((s, stop) => s + (stop.activities?.length || 0), 0) || 0;
-                const start = new Date(trip.startDate);
-                const end = new Date(trip.endDate);
-                let status = 'Upcoming';
-                let statusClass = 'badge-primary';
-                if (now >= start && now <= end) { status = 'Ongoing'; statusClass = 'badge-success'; }
-                else if (now > end) { status = 'Completed'; statusClass = 'badge-warning'; }
-
-                return (
-                  <tr key={trip.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 text-white font-medium">{trip.name}</td>
-                    <td className="px-6 py-4 text-surface-400">
-                      {start.toLocaleDateString()} — {end.toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-surface-400">{stopCount}</td>
-                    <td className="px-6 py-4 text-surface-400">{actCount}</td>
-                    <td className="px-6 py-4">
-                      <span className={statusClass}>{status}</span>
-                    </td>
-                  </tr>
-                );
-              })}
-              {trips.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-surface-500">No trips found.</td>
+            <tbody className="divide-y divide-slate-700/50">
+              {usersList.map((u) => (
+                <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
+                        {u.name.charAt(0)}
+                      </div>
+                      <span className="text-slate-200">{u.name}</span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-slate-300">{u.email}</td>
+                  <td className="p-4">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                      u.role === 'ADMIN' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="p-4 text-slate-300">{u._count.trips}</td>
+                  <td className="p-4 text-slate-400 text-sm">{new Date(u.createdAt).toLocaleDateString()}</td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>

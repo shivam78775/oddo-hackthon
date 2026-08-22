@@ -5,10 +5,25 @@ export interface User {
   name: string;
   email: string;
   photoUrl?: string;
+  phone?: string;
   city?: string;
   country?: string;
-  phone?: string;
+  role?: string;
+  _count?: { trips: number };
   createdAt: string;
+}
+
+export interface Post {
+  id: string;
+  userId: string;
+  content: string;
+  tripId?: string;
+  createdAt: string;
+  user: {
+    name: string;
+    city?: string;
+    country?: string;
+  };
 }
 
 export interface Trip {
