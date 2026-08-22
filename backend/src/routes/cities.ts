@@ -19,10 +19,10 @@ router.get('/', async (req: Request, res: Response) => {
     const where: any = {};
 
     if (q) {
-      const searchTerm = (q as string).toLowerCase();
+      const searchTerm = (q as string);
       where.OR = [
-        { name: { contains: searchTerm, mode: 'insensitive' } },
-        { country: { contains: searchTerm, mode: 'insensitive' } },
+        { name: { contains: searchTerm } },
+        { country: { contains: searchTerm } },
       ];
     }
     if (region) {
